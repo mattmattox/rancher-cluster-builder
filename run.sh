@@ -285,6 +285,9 @@ then
 elif [[ "$Action" == "rolling_reboot" ]]
 then
   rolling_reboot
+elif [[ "$Action" == "rancher_up" ]]
+then
+  rancher_up
 else
   echo "Unknown Action"
   exit 254
