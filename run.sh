@@ -191,14 +191,6 @@ rancher_up() {
   else
     techo "etcd snapshot was successful, processing to Rancher Upgrade/Install"
   fi
-  techo "Adding Rancher helm repos"
-  helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
-  helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
-  helm repo add rancher-alpha https://releases.rancher.com/server-charts/alpha
-  techo "Fetching charts"
-  helm fetch rancher-latest/rancher
-  helm fetch rancher-stable/rancher
-  helm fetch rancher-alpha/rancher
   techo "Verifing cluster access"
   export KUBECONFIG=kube_config_cluster.yml
   kubectl get nodes -o wide
@@ -230,9 +222,19 @@ rancher_up() {
     techo "Rancher Generated Certificates (Default) configured, installing cert-manager"
     install_cert-manager
   fi
+  techo "Adding Rancher helm repos"
+  RancherChart=`cat ./rancher-values.yaml | grep 'rancher_chart:' | awk '{print $2}'`
+  RancherChartUrlEnd=`echo $RancherChart | awk -F '-' '{print $2}'`
+  if [[ -z $RancherChart ]]
+  then
+    RancherChart="rancher-latest"
+    RancherChartUrlEnd="latest"
+  fi
+  helm repo add "$RancherChart" https://releases.rancher.com/server-charts/"$RancherChartUrlEnd"
+  techo "Fetching charts"
+  helm fetch "$RancherChart"/rancher
   techo "Deploying Rancher"
   RancherVerison=`cat ./rancher-values.yaml | grep 'rancher_verison:' | awk '{print $2}'`
-  RancherChart=`cat ./rancher-values.yaml | grep 'rancher_chart:' | awk '{print $2}'`
   if [[ -z $RancherVerison ]]
   then
     techo "Installing/Upgrading Rancher to latest"
